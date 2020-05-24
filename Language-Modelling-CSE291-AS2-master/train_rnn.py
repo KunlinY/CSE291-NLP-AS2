@@ -134,12 +134,12 @@ def main(args):
 
                 if iteration % args.print_every == 0 or iteration+1 == len(data_loader):
                     logger.info("%s Batch %04d/%i, Loss %9.4f"
-                        %(split.upper(), iteration, len(data_loader)-1, loss.data[0]))
+                        %(split.upper(), iteration, len(data_loader)-1, loss.item()))
 
-            logger.info("%s Epoch %02d/%i, Mean Loss %9.4f"%(split.upper(), epoch, args.epochs, torch.mean(tracker['Loss'])))
+            logger.info("%s Epoch %02d/%i, Mean Loss %9.4f"%(split.upper(), epoch, args.epochs, 1.0 * sum(tracker['Loss']) / len(tracker['Loss'])))
 
             if args.tensorboard_logging:
-                writer.add_scalar("%s-Epoch/Loss"%split.upper(), torch.mean(tracker['Loss']), epoch)
+                writer.add_scalar("%s-Epoch/Loss"%split.upper(), 1.0 * sum(tracker['Loss']) / len(tracker['Loss']), epoch)
 
             # save checkpoint
             if split == 'train':
