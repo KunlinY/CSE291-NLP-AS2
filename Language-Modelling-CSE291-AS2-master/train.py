@@ -153,22 +153,22 @@ def main(args):
 
                 if iteration % args.print_every == 0 or iteration+1 == len(data_loader):
                     logger.info("%s Batch %04d/%i, Loss %9.4f, Recon-Loss %9.4f, KL-Loss %9.4f, KL-Weight %6.3f"
-                        %(split.upper(), iteration, len(data_loader)-1, loss.data[0], recon_loss.data[0]/batch_size, KL_loss.data[0]/batch_size, KL_weight))
+                        %(split.upper(), iteration, len(data_loader)-1, loss.item(), recon_loss.data[0]/batch_size, KL_loss.data[0]/batch_size, KL_weight))
 
                 if split == 'valid':
                     if 'target_sents' not in tracker:
                         tracker['target_sents'] = list()
                     tracker['target_sents'] += idx2word(batch['target'].data, i2w=datasets['train'].get_i2w(), pad_idx=datasets['train'].pad_idx)
-                    tracker['z'] = torch.cat((tracker['z'], z.data), dim=0)
+                    tracker['z'] = (tracker['z'] + z.data)
 
-            logger.info("%s Epoch %02d/%i, Mean Negative ELBO %9.4f"%(split.upper(), epoch, args.epochs, torch.mean(tracker['negELBO'])))
+            logger.info("%s Epoch %02d/%i, Mean Negative ELBO %9.4f"%(split.upper(), epoch, args.epochs, sum(tracker['negELBO']) / len(tracker['negELBO'])))
 
             if args.tensorboard_logging:
-                writer.add_scalar("%s-Epoch/NegELBO"%split.upper(), torch.mean(tracker['negELBO']), epoch)
+                writer.add_scalar("%s-Epoch/NegELBO"%split.upper(), sum(tracker['negELBO']) / len(tracker['negELBO']), epoch)
 
             # save a dump of all sentences and the encoded latent space
             if split == 'valid':
-                dump = {'target_sents':tracker['target_sents'], 'z':tracker['z'].tolist()}
+                dump = {'target_sents':tracker['target_sents'], 'z':tracker['z']}
                 if not os.path.exists(os.path.join('dumps', ts)):
                     os.makedirs('dumps/'+ts)
                 with open(os.path.join('dumps/'+ts+'/valid_E%i.json'%epoch), 'w') as dump_file:
