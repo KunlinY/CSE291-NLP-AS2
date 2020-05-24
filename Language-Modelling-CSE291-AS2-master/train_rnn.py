@@ -130,7 +130,7 @@ def main(args):
                 tracker["Loss"].append(loss.item())
 
                 if args.tensorboard_logging:
-                    writer.add_scalar("%s/NLL_Loss"%split.upper(), NLL_loss.data[0]/batch_size, epoch*len(data_loader) + iteration)
+                    writer.add_scalar("%s/NLL_Loss"%split.upper(), NLL_loss.item()/batch_size, epoch*len(data_loader) + iteration)
 
                 if iteration % args.print_every == 0 or iteration+1 == len(data_loader):
                     logger.info("%s Batch %04d/%i, Loss %9.4f"
