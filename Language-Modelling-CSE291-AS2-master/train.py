@@ -190,12 +190,10 @@ def main(args):
                 logger.info("Model saved at %s"%checkpoint_path)
 
     sns.set(style="whitegrid")
-    ax = sns.lineplot(data=pd.DataFrame(train_loss, columns=["data"]), color="blue")
+    ax = sns.lineplot(data=pd.DataFrame(train_loss, columns=["data"]), color="blue", legend="Train")
+    ax = sns.lineplot(data=pd.DataFrame(test_loss, columns=["data"]), color="orange", legend="Test")
     ax.set(xlabel='Epoch', ylabel='Loss')
-    plt.savefig(os.path.join(args.logdir, experiment_name(args, ts), "train.png"), transparent=True, dpi=300)
-    ax = sns.lineplot(data=pd.DataFrame(test_loss, columns=["data"]), color="blue")
-    ax.set(xlabel='Epoch', ylabel='Loss')
-    plt.savefig(os.path.join(args.logdir, experiment_name(args, ts), "test.png"), transparent=True, dpi=300)
+    plt.savefig(os.path.join(args.logdir, experiment_name(args, ts), "loss.png"), transparent=True, dpi=300)
 
 
 if __name__ == '__main__':
