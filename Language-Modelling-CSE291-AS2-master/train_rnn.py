@@ -87,7 +87,8 @@ def main(args):
 
     tensor = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.Tensor
     step = 0
-    plot_data = []
+    train_loss = []
+    test_loss = []
     for epoch in range(args.epochs):
 
         for split in splits:
@@ -145,7 +146,10 @@ def main(args):
             if args.tensorboard_logging:
                 writer.add_scalar("%s-Epoch/Loss"%split.upper(), 1.0 * sum(tracker['Loss']) / len(tracker['Loss']), epoch)
 
-            plot_data.append(1.0 * sum(tracker['Loss']) / len(tracker['Loss']))
+            if split == 'train':
+                train_loss.append(1.0 * sum(tracker['Loss']) / len(tracker['Loss']))
+            else:
+                test_loss.append(1.0 * sum(tracker['Loss']) / len(tracker['Loss']))
 
             # save checkpoint
             if split == 'train':
@@ -154,9 +158,12 @@ def main(args):
                 logger.info("Model saved at %s"%checkpoint_path)
 
     sns.set(style="whitegrid")
-    ax = sns.lineplot(data=pd.DataFrame(plot_data, columns=["data"]), color="blue")
+    ax = sns.lineplot(data=pd.DataFrame(train_loss, columns=["data"]), color="blue")
     ax.set(xlabel='Epoch', ylabel='Loss')
-    plt.savefig(os.path.join(args.logdir, experiment_name_rnn(args, ts), "loss.png"), transparent=True, dpi=300)
+    plt.savefig(os.path.join(args.logdir, experiment_name_rnn(args, ts), "train.png"), transparent=True, dpi=300)
+    ax = sns.lineplot(data=pd.DataFrame(test_loss, columns=["data"]), color="blue")
+    ax.set(xlabel='Epoch', ylabel='Loss')
+    plt.savefig(os.path.join(args.logdir, experiment_name_rnn(args, ts), "test.png"), transparent=True, dpi=300)
 
 
 if __name__ == '__main__':
