@@ -71,9 +71,33 @@ def main(args):
     save_model_path = os.path.join(args.save_model_path, ts)
     os.makedirs(save_model_path)
 
+    total_step = int(args.epochs * 42000.0 / args.batch_size)
+
     def kl_anneal_function(anneal_function, step):
+        if anneal_function == 'half':
+            return 0.5
         if anneal_function == 'identity':
             return 1
+        if anneal_function == 'double':
+            return 2
+        if anneal_function == 'quadra':
+            return 4
+
+        if anneal_function == 'sigmoid':
+            return 1/(1 + np.exp(0.5 * total_step - step))
+
+        if anneal_function == 'monotonic':
+            beta = step * 8 / total_step
+            if step > 1:
+                beta = 1.0
+            return beta
+
+        if anneal_function == 'cyclical':
+            t = total_step / 4
+            beta = (step % t) / t * 16 / total_step
+            if step > 1:
+                beta = 1.0
+            return beta
 
     ReconLoss = torch.nn.NLLLoss(reduction='sum', ignore_index=datasets['train'].pad_idx)
     def loss_fn(logp, target, length, mean, logv, anneal_function, step):
@@ -149,6 +173,9 @@ def main(args):
                 # bookkeepeing
                 # tracker['negELBO'] = torch.cat((tracker['negELBO'], loss.data))
                 tracker["negELBO"].append(loss.item())
+                tracker["recon_loss"].append(recon_loss.item()/batch_size)
+                tracker["KL_Loss"].append(KL_loss.item()/batch_size)
+                tracker["KL_Weight"].append(KL_weight)
 
                 if args.tensorboard_logging:
                     writer.add_scalar("%s/Negative_ELBO"%split.upper(), loss.item(), epoch*len(data_loader) + iteration)
@@ -170,6 +197,9 @@ def main(args):
 
             if args.tensorboard_logging:
                 writer.add_scalar("%s-Epoch/NegELBO"%split.upper(), 1.0 *sum(tracker['negELBO']) / len(tracker['negELBO']), epoch)
+                writer.add_scalar("%s-Epoch/recon_loss"%split.upper(), 1.0 *sum(tracker['recon_loss']) / len(tracker['recon_loss']), epoch)
+                writer.add_scalar("%s-Epoch/KL_Loss"%split.upper(), 1.0 *sum(tracker['KL_Loss']) / len(tracker['KL_Loss']), epoch)
+                writer.add_scalar("%s-Epoch/KL_Weight"%split.upper(), 1.0 *sum(tracker['KL_Weight']) / len(tracker['KL_Weight']), epoch)
 
             if split == 'train':
                 train_loss.append(1.0 * sum(tracker['negELBO']) / len(tracker['negELBO']))
