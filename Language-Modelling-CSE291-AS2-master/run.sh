@@ -9,3 +9,6 @@ python3 train.py --tensorboard_logging --data_dir ../data --logdir vae_log --epo
 python3 train.py --tensorboard_logging --data_dir ../data --logdir vae_log --epochs 50 --batch_size 512 --anneal_function sigmoid
 python3 train.py --tensorboard_logging --data_dir ../data --logdir vae_log --epochs 50 --batch_size 512 --anneal_function monotonic
 python3 train.py --tensorboard_logging --data_dir ../data --logdir vae_log --epochs 50 --batch_size 512 --anneal_function cyclical
+python3 train_delta.py --tensorboard_logging --data_dir ../data --logdir vae_log --epochs 50 --batch_size 512 --anneal_function identity --delta 0.2
+python3 train_delta.py --tensorboard_logging --data_dir ../data --logdir vae_log --epochs 50 --batch_size 512 --anneal_function identity --delta 0.5
+python3 train_delta.py --tensorboard_logging --data_dir ../data --logdir vae_log --epochs 50 --batch_size 512 --anneal_function identity --delta 0.8
