@@ -9,6 +9,7 @@ from multiprocessing import cpu_count
 from tensorboardX import SummaryWriter
 from torch.utils.data import DataLoader
 from collections import OrderedDict, defaultdict
+import seaborn as sns
 
 from ptb import PTB
 from utils import to_var, idx2word, experiment_name_rnn
@@ -84,6 +85,7 @@ def main(args):
 
     tensor = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.Tensor
     step = 0
+    plot_data = []
     for epoch in range(args.epochs):
 
         for split in splits:
@@ -141,11 +143,18 @@ def main(args):
             if args.tensorboard_logging:
                 writer.add_scalar("%s-Epoch/Loss"%split.upper(), 1.0 * sum(tracker['Loss']) / len(tracker['Loss']), epoch)
 
+            plot_data.append(1.0 * sum(tracker['Loss']) / len(tracker['Loss']))
+
             # save checkpoint
             if split == 'train':
                 checkpoint_path = os.path.join(save_model_path, "E%i.pytorch"%(epoch))
                 torch.save(model.state_dict(), checkpoint_path)
                 logger.info("Model saved at %s"%checkpoint_path)
+
+    sns.set(style="whitegrid")
+    ax = sns.lineplot(data=plot_data, color="blue")
+    ax.set(xlabel='Epoch', ylabel='Loss')
+    ax.savefig(os.path.join(args.logdir, experiment_name_rnn(args, ts), "loss.png"))
 
 
 if __name__ == '__main__':

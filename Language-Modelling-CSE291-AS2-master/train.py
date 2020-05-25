@@ -9,6 +9,7 @@ from multiprocessing import cpu_count
 from tensorboardX import SummaryWriter
 from torch.utils.data import DataLoader
 from collections import OrderedDict, defaultdict
+import seaborn as sns
 
 from ptb import PTB
 from utils import to_var, idx2word, experiment_name
@@ -92,6 +93,7 @@ def main(args):
 
     tensor = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.Tensor
     step = 0
+    plot_data = []
     for epoch in range(args.epochs):
 
         for split in splits:
@@ -164,8 +166,9 @@ def main(args):
             logger.info("%s Epoch %02d/%i, Mean Negative ELBO %9.4f"%(split.upper(), epoch, args.epochs, sum(tracker['negELBO']) / len(tracker['negELBO'])))
 
             if args.tensorboard_logging:
-                writer.add_scalar("%s-Epoch/NegELBO"%split.upper(), sum(tracker['negELBO']) / len(tracker['negELBO']), epoch)
+                writer.add_scalar("%s-Epoch/NegELBO"%split.upper(), 1.0 *sum(tracker['negELBO']) / len(tracker['negELBO']), epoch)
 
+            plot_data.append(1.0 * sum(tracker['negELBO']) / len(tracker['negELBO']))
             # save a dump of all sentences and the encoded latent space
             if split == 'valid':
                 dump = {'target_sents':tracker['target_sents'], 'z':tracker['z']}
@@ -179,6 +182,11 @@ def main(args):
                 checkpoint_path = os.path.join(save_model_path, "E%i.pytorch"%(epoch))
                 torch.save(model.state_dict(), checkpoint_path)
                 logger.info("Model saved at %s"%checkpoint_path)
+
+    sns.set(style="whitegrid")
+    ax = sns.lineplot(data=plot_data, color="blue")
+    ax.set(xlabel='Epoch', ylabel='Loss')
+    ax.savefig(os.path.join(args.logdir, experiment_name(args,ts), "loss.png"))
 
 
 if __name__ == '__main__':
