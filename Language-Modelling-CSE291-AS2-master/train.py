@@ -190,8 +190,7 @@ def main(args):
                 logger.info("Model saved at %s"%checkpoint_path)
 
     sns.set(style="whitegrid")
-    ax = sns.lineplot(data=pd.DataFrame(train_loss, columns=["data"]), color="blue", legend=False)
-    ax = sns.lineplot(data=pd.DataFrame(test_loss, columns=["data"]), color="orange", legend=False)
+    ax = sns.lineplot(data=pd.DataFrame([train_loss, test_loss], columns=["Train", "Test"]), legend=False)
     ax.set(xlabel='Epoch', ylabel='Loss')
     plt.legend(title='Split', loc='upper right', labels=['Train', 'Test'])
     plt.savefig(os.path.join(args.logdir, experiment_name(args, ts), "loss.png"), transparent=True, dpi=300)
