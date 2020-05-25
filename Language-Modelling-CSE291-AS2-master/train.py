@@ -84,18 +84,18 @@ def main(args):
             return 4
 
         if anneal_function == 'sigmoid':
-            return 1/(1 + np.exp(0.5 * total_step - step))
+            return 1/(1 + np.exp((0.5 * total_step - step) / 200))
 
         if anneal_function == 'monotonic':
             beta = step * 8 / total_step
-            if step > 1:
+            if beta > 1:
                 beta = 1.0
             return beta
 
         if anneal_function == 'cyclical':
             t = total_step / 4
             beta = (step % t) / t * 16 / total_step
-            if step > 1:
+            if beta > 1:
                 beta = 1.0
             return beta
 
