@@ -94,7 +94,7 @@ def main(args):
 
         if anneal_function == 'cyclical':
             t = total_step / 4
-            beta = (step % t) / t * 16 / total_step
+            beta = 8 * (step % t) / t
             if beta > 1:
                 beta = 1.0
             return beta

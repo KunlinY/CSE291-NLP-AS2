@@ -157,7 +157,11 @@ def main(args):
                     batch['length'], mean, logv, args.anneal_function, step)
 
                 alpha = args.delta
-                KL_loss = max(KL_loss.item(), 0.5 * args.hidden_size * ((batch['length'] - 2) * np.log(1 + alpha * alpha) - np.log(1 - alpha * alpha)))
+                limit = 0.5 * args.hidden_size * ((sum(batch['length'].detach()) - 2) * np.log(1 + alpha * alpha) - np.log(1 - alpha * alpha))
+                if KL_loss.item() < limit:
+                    with torch.no_grad():
+                        KL_loss.set_(torch.tensor(limit).to(KL_loss.device))
+                        print(KL_loss)
 
                 if split == 'train':
                     loss = (recon_loss + KL_weight * KL_loss)/batch_size
