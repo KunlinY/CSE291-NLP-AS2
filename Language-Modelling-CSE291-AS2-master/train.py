@@ -11,6 +11,7 @@ from torch.utils.data import DataLoader
 from collections import OrderedDict, defaultdict
 import seaborn as sns
 import pandas as pd
+import matplotlib.pyplot as plt
 
 from ptb import PTB
 from utils import to_var, idx2word, experiment_name
@@ -187,7 +188,7 @@ def main(args):
     sns.set(style="whitegrid")
     ax = sns.lineplot(data=pd.DataFrame(plot_data, columns=["data"]), color="blue")
     ax.set(xlabel='Epoch', ylabel='Loss')
-    ax.savefig(os.path.join(args.logdir, experiment_name(args,ts), "loss.png"))
+    ax.savefig(os.path.join(args.logdir, experiment_name(args,ts), "loss.png"), transparent=True, dpi=300)
 
 
 if __name__ == '__main__':
