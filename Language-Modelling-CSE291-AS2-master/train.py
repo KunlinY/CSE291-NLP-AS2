@@ -185,7 +185,7 @@ def main(args):
                 logger.info("Model saved at %s"%checkpoint_path)
 
     sns.set(style="whitegrid")
-    ax = sns.lineplot(y="data", data=pd.DataFrame(plot_data, columns="data"), color="blue")
+    ax = sns.lineplot(data=pd.DataFrame(plot_data, columns=["data"]), color="blue")
     ax.set(xlabel='Epoch', ylabel='Loss')
     ax.savefig(os.path.join(args.logdir, experiment_name(args,ts), "loss.png"))
 
