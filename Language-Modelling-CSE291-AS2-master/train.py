@@ -17,18 +17,20 @@ from ptb import PTB
 from utils import to_var, idx2word, experiment_name
 from model import SentenceVAE
 
-logging.basicConfig(
-    format="%(asctime)s - %(levelname)s - %(name)s -   %(message)s",
-    datefmt="%m/%d/%Y %H:%M:%S",
-    level=logging.INFO,
-)
-logger = logging.getLogger(__name__)
 
 def main(args):
 
     ts = time.strftime('%Y-%b-%d-%H:%M:%S', time.gmtime())
 
     splits = ['train', 'valid'] + (['test'] if args.test else [])
+
+    logging.basicConfig(
+        format="%(asctime)s - %(levelname)s - %(name)s -   %(message)s",
+        datefmt="%m/%d/%Y %H:%M:%S",
+        level=logging.INFO,
+        filename=os.path.join(args.logdir, experiment_name(args, ts) + ".log")
+    )
+    logger = logging.getLogger(__name__)
 
     datasets = OrderedDict()
     for split in splits:
@@ -87,14 +89,14 @@ def main(args):
             return 1/(1 + np.exp((0.5 * total_step - step) / 200))
 
         if anneal_function == 'monotonic':
-            beta = step * 8 / total_step
+            beta = step * 4 / total_step
             if beta > 1:
                 beta = 1.0
             return beta
 
         if anneal_function == 'cyclical':
             t = total_step / 4
-            beta = 8 * (step % t) / t
+            beta = 4 * (step % t) / t
             if beta > 1:
                 beta = 1.0
             return beta
@@ -184,7 +186,15 @@ def main(args):
                     writer.add_scalar("%s/KL_Weight"%split.upper(), KL_weight, epoch*len(data_loader) + iteration)
 
                 if iteration % args.print_every == 0 or iteration+1 == len(data_loader):
-                    logger.info("%s Batch %04d/%i, Loss %9.4f, Recon-Loss %9.4f, KL-Loss %9.4f, KL-Weight %6.3f"
+                    logger.info("\tStep\t%s\t%04d\t%i\t%9.4f\t%9.4f\t%9.4f\t%6.3f"
+                        %(split.upper(),
+                          iteration,
+                          len(data_loader)-1,
+                          loss.item(),
+                          recon_loss.item()/batch_size,
+                          KL_loss.item()/batch_size,
+                          KL_weight))
+                    print("%s Batch %04d/%i, Loss %9.4f, Recon-Loss %9.4f, KL-Loss %9.4f, KL-Weight %6.3f"
                         %(split.upper(), iteration, len(data_loader)-1, loss.item(), recon_loss.item()/batch_size, KL_loss.item()/batch_size, KL_weight))
 
                 if split == 'valid':
@@ -193,7 +203,10 @@ def main(args):
                     tracker['target_sents'] += idx2word(batch['target'].data, i2w=datasets['train'].get_i2w(), pad_idx=datasets['train'].pad_idx)
                     tracker['z'].append(z.data.tolist())
 
-            logger.info("%s Epoch %02d/%i, Mean Negative ELBO %9.4f"%(split.upper(), epoch, args.epochs, sum(tracker['negELBO']) / len(tracker['negELBO'])))
+            logger.info("\tEpoch\t%s\t%02d\t%i\t%9.4f\t%9.4f\t%9.4f\t%6.3f"
+                        % (split.upper(), epoch, args.epochs, sum(tracker['negELBO']) / len(tracker['negELBO']), 1.0 *sum(tracker['recon_loss']) / len(tracker['recon_loss']),
+                           1.0 *sum(tracker['KL_Loss']) / len(tracker['KL_Loss']), 1.0 *sum(tracker['KL_Weight']) / len(tracker['KL_Weight'])))
+            print("%s Epoch %02d/%i, Mean Negative ELBO %9.4f"%(split.upper(), epoch, args.epochs, sum(tracker['negELBO']) / len(tracker['negELBO'])))
 
             if args.tensorboard_logging:
                 writer.add_scalar("%s-Epoch/NegELBO"%split.upper(), 1.0 *sum(tracker['negELBO']) / len(tracker['negELBO']), epoch)
@@ -217,7 +230,7 @@ def main(args):
             if split == 'train':
                 checkpoint_path = os.path.join(save_model_path, "E%i.pytorch"%(epoch))
                 torch.save(model.state_dict(), checkpoint_path)
-                logger.info("Model saved at %s"%checkpoint_path)
+                print("Model saved at %s"%checkpoint_path)
 
     sns.set(style="whitegrid")
     df = pd.DataFrame()

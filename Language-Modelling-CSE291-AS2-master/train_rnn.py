@@ -17,18 +17,20 @@ from ptb import PTB
 from utils import to_var, idx2word, experiment_name_rnn
 from model_rnn import SentenceRNN
 
-logging.basicConfig(
-    format="%(asctime)s - %(levelname)s - %(name)s -   %(message)s",
-    datefmt="%m/%d/%Y %H:%M:%S",
-    level=logging.INFO,
-)
-logger = logging.getLogger(__name__)
 
 def main(args):
 
     ts = time.strftime('%Y-%b-%d-%H:%M:%S', time.gmtime())
 
     splits = ['train', 'valid'] + (['test'] if args.test else [])
+
+    logging.basicConfig(
+        format="%(asctime)s - %(levelname)s - %(name)s -   %(message)s",
+        datefmt="%m/%d/%Y %H:%M:%S",
+        level=logging.INFO,
+        filename=os.path.join(args.logdir, experiment_name_rnn(args, ts) + ".log")
+    )
+    logger = logging.getLogger(__name__)
 
     datasets = OrderedDict()
     for split in splits:
@@ -138,10 +140,13 @@ def main(args):
                     writer.add_scalar("%s/NLL_Loss"%split.upper(), NLL_loss.item()/batch_size, epoch*len(data_loader) + iteration)
 
                 if iteration % args.print_every == 0 or iteration+1 == len(data_loader):
-                    logger.info("%s Batch %04d/%i, Loss %9.4f"
+                    logger.info("\tStep\t%s\t%04d\t%i\t%9.4f"
+                        %(split.upper(), iteration, len(data_loader)-1, loss.item()))
+                    print("%s Batch %04d/%i, Loss %9.4f"
                         %(split.upper(), iteration, len(data_loader)-1, loss.item()))
 
-            logger.info("%s Epoch %02d/%i, Mean Loss %9.4f"%(split.upper(), epoch, args.epochs, 1.0 * sum(tracker['Loss']) / len(tracker['Loss'])))
+            logger.info("\tEpoch\t%s\t%02d\t%i\t%9.4f"%(split.upper(), epoch, args.epochs, 1.0 * sum(tracker['Loss']) / len(tracker['Loss'])))
+            print("%s Epoch %02d/%i, Mean Loss %9.4f"%(split.upper(), epoch, args.epochs, 1.0 * sum(tracker['Loss']) / len(tracker['Loss'])))
 
             if args.tensorboard_logging:
                 writer.add_scalar("%s-Epoch/Loss"%split.upper(), 1.0 * sum(tracker['Loss']) / len(tracker['Loss']), epoch)
@@ -155,7 +160,7 @@ def main(args):
             if split == 'train':
                 checkpoint_path = os.path.join(save_model_path, "E%i.pytorch"%(epoch))
                 torch.save(model.state_dict(), checkpoint_path)
-                logger.info("Model saved at %s"%checkpoint_path)
+                print("Model saved at %s"%checkpoint_path)
 
     sns.set(style="whitegrid")
     df = pd.DataFrame()
