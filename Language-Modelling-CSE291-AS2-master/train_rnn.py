@@ -22,7 +22,7 @@ def main(args):
 
     ts = time.strftime('%Y-%b-%d-%H:%M:%S', time.gmtime())
 
-    splits = ['train', 'valid'] + (['test'] if args.test else [])
+    splits = ['train', 'valid']
 
     logging.basicConfig(
         format="%(asctime)s - %(levelname)s - %(name)s -   %(message)s",
