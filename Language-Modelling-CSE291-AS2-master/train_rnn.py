@@ -169,7 +169,7 @@ def main(args):
     ax = sns.lineplot(data=df, legend=False)
     ax.set(xlabel='Epoch', ylabel='Loss')
     plt.legend(title='Split', loc='upper right', labels=['Train', 'Test'])
-    plt.savefig(os.path.join(args.logdir, experiment_name_rnn(args, ts), "loss.png"), transparent=True, dpi=300)
+    plt.savefig(os.path.join(args.logdir, experiment_name_rnn(args, ts) + ".png"), transparent=True, dpi=300)
 
 
 if __name__ == '__main__':
