@@ -160,7 +160,7 @@ def main(args):
                 limit = 0.5 * args.hidden_size * ((sum(batch['length'].detach()) - 2) * np.log(1 + alpha * alpha) - np.log(1 - alpha * alpha))
                 if KL_loss.item() < limit:
                     with torch.no_grad():
-                        KL_loss.set_(torch.tensor(limit).to(KL_loss.device))
+                        KL_loss.data.set_(limit)
                         print(KL_loss)
 
                 if split == 'train':
